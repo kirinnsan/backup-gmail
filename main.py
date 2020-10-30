@@ -1,55 +1,31 @@
 from __future__ import print_function
-import base64
-import pickle
-import os.path
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
+
+import auth
+from client import ApiClient
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
+# Number of emails retrieved
+MAIL_COUNTS = 5
 
 
 def main():
     """Shows basic usage of the Gmail API.
     Lists the user's Gmail labels.
     """
-    creds = None
-    # The file token.pickle stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
-            creds = pickle.load(token)
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'client_id.json', SCOPES)
-            creds = flow.run_console()
-        # Save the credentials for the next run
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
 
-    service = build('gmail', 'v1', credentials=creds)
+    creds = auth.authenticate(SCOPES)
 
-    # Call the Gmail API
-    results = service.users().messages().list(
-        userId='me', maxResults=3).execute()
-    messages = results.get('messages', [])
+    client = ApiClient(creds)
+    messages = client.get_mail_list(MAIL_COUNTS)
 
     # show message
     if not messages:
-        print('No messages found.')
+        print('No message list.')
     else:
         for message in messages:
-            id = message['id']
-            res = service.users().messages().get(userId='me', id=id).execute()
-            # message
-            b64_message = res['payload']['parts'][0]['body']['data']
-            message = base64.urlsafe_b64decode(b64_message + '=' * (-len(b64_message) % 4)).decode(encoding='utf-8')
+            message_id = message['id']
+            message = client.get_message(message_id)
             print(message)
             print('---------------------')
 
