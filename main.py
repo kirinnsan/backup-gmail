@@ -1,4 +1,5 @@
 from __future__ import print_function
+import base64
 import pickle
 import os.path
 from googleapiclient.discovery import build
@@ -36,7 +37,7 @@ def main():
 
     # Call the Gmail API
     results = service.users().messages().list(
-        userId='me', maxResults=5).execute()
+        userId='me', maxResults=3).execute()
     messages = results.get('messages', [])
 
     # show message
@@ -46,8 +47,10 @@ def main():
         for message in messages:
             id = message['id']
             res = service.users().messages().get(userId='me', id=id).execute()
-            # message summary
-            print(res['snippet'])
+            # message
+            b64_message = res['payload']['parts'][0]['body']['data']
+            message = base64.urlsafe_b64decode(b64_message + '=' * (-len(b64_message) % 4)).decode(encoding='utf-8')
+            print(message)
             print('---------------------')
 
 
