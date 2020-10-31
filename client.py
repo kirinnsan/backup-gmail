@@ -1,4 +1,5 @@
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 import util
 
@@ -10,15 +11,25 @@ class ApiClient(object):
 
     def get_mail_list(self, limit, query):
         # Call the Gmail API
-        results = self.service.users().messages().list(
-            userId='me', maxResults=limit, q=query).execute()
+        try:
+            results = self.service.users().messages().list(
+                userId='me', maxResults=limit, q=query).execute()
+        except HttpError as err:
+            print(f'action=get_mail_list error={err}')
+            raise
+
         messages = results.get('messages', [])
 
         return messages
 
     def get_message(self, id):
         # Call the Gmail API
-        res = self.service.users().messages().get(userId='me', id=id).execute()
+        try:
+            res = self.service.users().messages().get(userId='me', id=id).execute()
+        except HttpError as err:
+            print(f'action=get_message error={err}')
+            raise
+
         # Such as text/plain
         if 'data' in res['payload']['body']:
             b64_message = res['payload']['body']['data']
