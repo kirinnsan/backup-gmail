@@ -8,10 +8,10 @@ class ApiClient(object):
     def __init__(self, credential):
         self.service = build('gmail', 'v1', credentials=credential)
 
-    def get_mail_list(self, limit):
+    def get_mail_list(self, limit, query):
         # Call the Gmail API
         results = self.service.users().messages().list(
-            userId='me', maxResults=limit).execute()
+            userId='me', maxResults=limit, q=query).execute()
         messages = results.get('messages', [])
 
         return messages

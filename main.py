@@ -7,6 +7,21 @@ from client import ApiClient
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 # Number of emails retrieved
 MAIL_COUNTS = 5
+# Search criteria
+SEARCH_CRITERIA = {
+    'from': "test_from@gmail.com",
+    'to': "",
+    'subject': ""
+}
+
+
+def build_search_criteria(query_dict):
+    query_string = ''
+    for key, value in query_dict.items():
+        if value:
+            query_string += key + ':' + value + ' '
+
+    return query_string
 
 
 def main():
@@ -16,8 +31,10 @@ def main():
 
     creds = auth.authenticate(SCOPES)
 
+    query = build_search_criteria(SEARCH_CRITERIA)
+
     client = ApiClient(creds)
-    messages = client.get_mail_list(MAIL_COUNTS)
+    messages = client.get_mail_list(MAIL_COUNTS, query)
 
     # show message
     if not messages:
