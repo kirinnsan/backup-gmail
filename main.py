@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import auth
 from client import ApiClient
+import util
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
@@ -9,10 +10,11 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 MAIL_COUNTS = 5
 # Search criteria
 SEARCH_CRITERIA = {
-    'from': "test_from@gmail.com",
+    'from': "",
     'to': "",
     'subject': ""
 }
+BASE_DIR = 'mail_box'
 
 
 def build_search_criteria(query_dict):
@@ -36,15 +38,17 @@ def main():
     client = ApiClient(creds)
     messages = client.get_mail_list(MAIL_COUNTS, query)
 
-    # show message
     if not messages:
         print('No message list.')
     else:
         for message in messages:
             message_id = message['id']
-            message = client.get_message(message_id)
-            print(message)
-            print('---------------------')
+
+            # get subject and message
+            result = client.get_subject_message(message_id)
+
+            # save file
+            util.save_file(BASE_DIR, result)
 
 
 if __name__ == '__main__':
