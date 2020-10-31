@@ -22,13 +22,18 @@ class ApiClient(object):
 
         return messages
 
-    def get_message(self, id):
+    def get_subject_message(self, id):
         # Call the Gmail API
         try:
             res = self.service.users().messages().get(userId='me', id=id).execute()
         except HttpError as err:
             print(f'action=get_message error={err}')
             raise
+
+        result = {}
+
+        subject = [d.get('value') for d in res['payload']['headers'] if d.get('name') == 'Subject'][0]
+        result['subject'] = subject
 
         # Such as text/plain
         if 'data' in res['payload']['body']:
@@ -37,5 +42,6 @@ class ApiClient(object):
         elif res['payload']['parts'] is not None:
             b64_message = res['payload']['parts'][0]['body']['data']
         message = util.base64_decode(b64_message)
+        result['message'] = message
 
-        return message
+        return result
